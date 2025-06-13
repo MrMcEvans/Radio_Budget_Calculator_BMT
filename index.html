@@ -117,7 +117,7 @@
       const baseRate = rates[station][daypart][length];
 
       const spotCost = baseRate * spots;
-      const streaming = 1 * spots;
+      const streaming = 1 * spots * 2;
 
       // KAYD includes streaming in their 10% streaming fee
       const adsyncBase = (station === "KAYD") ? spotCost + streaming : spotCost;
