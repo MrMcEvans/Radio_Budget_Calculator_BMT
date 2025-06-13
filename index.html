@@ -1,62 +1,70 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Beaumont Radio Budget Calculator</title>
-  <style>
-    body { font-family: sans-serif; padding: 2rem; max-width: 700px; margin: auto; }
-    label, select, input { display: block; margin-bottom: 10px; width: 100%; }
-    button { padding: 10px 15px; margin-top: 10px; }
-    .result, .saved { margin-top: 20px; font-weight: bold; }
-    hr { margin: 1rem 0; }
-  </style>
-</head>
-<body>
-  <h2>Beaumont Radio Budget Calculator</h2>
+  <head>
+    <meta charset="UTF-8">
+    <title>Beaumont Radio Budget Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gray-100 text-gray-800 py-10">
+    <img src="/images/Beaumont Station Watermark.png" class="mx-auto rounded-lg mb-10" alt="">
+    <div class="max-w-2xl mx-auto p-6 bg-white shadow-lg rounded-xl">
+      <h2 class="text-2xl font-bold mb-6 text-center">Beaumont Radio Budget Calculator</h2>
+  
+      <label for="station" class="font-semibold">Station:</label>
+      <select id="station" onchange="updateDayparts()" class="border rounded px-3 py-2 mb-4 w-full">
+        <option value="Q94">Q94</option>
+        <option value="KAYD">KAYD</option>
+        <option value="Magic">Magic 102.5</option>
+      </select>
+  
+      <label for="daypart" class="font-semibold">Daypart:</label>
+      <select id="daypart" onchange="toggleCustomInputs()" class="border rounded px-3 py-2 mb-4 w-full"></select>
+  
+      <div id="customInputs" class="bg-gray-50 border rounded p-4 mb-4 hidden">
+        <label for="customDaypart" class="font-semibold">Custom Daypart Label:</label>
+        <input type="text" id="customDaypart" placeholder="e.g., M-F 9a-12p" class="border rounded px-3 py-2 mb-2 w-full">
+  
+        <label for="customRate60">Custom :60 Rate:</label>
+        <input type="number" id="customRate60" placeholder="e.g., 25" class="border rounded px-3 py-2 mb-2 w-full">
+  
+        <label for="customRate30">Custom :30 Rate:</label>
+        <input type="number" id="customRate30" placeholder="e.g., 20" class="border rounded px-3 py-2 mb-2 w-full">
+  
+        <label for="customRate15">Custom :15 Rate:</label>
+        <input type="number" id="customRate15" placeholder="e.g., 12" class="border rounded px-3 py-2 w-full">
+      </div>
+  
+      <label for="length" class="font-semibold">Spot Length:</label>
+      <select id="length" class="border rounded px-3 py-2 mb-4 w-full">
+        <option value="60">:60</option>
+        <option value="30">:30</option>
+        <option value="15">:15</option>
+      </select>
+  
+      <label for="spots" class="font-semibold">Number of Spots:</label>
+      <input type="number" id="spots" value="10" min="1" class="border rounded px-3 py-2 mb-4 w-full">
+  
+      <div class="flex flex-wrap gap-2 mb-6">
+        <button onclick="calculate()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Calculate</button>
+        <button onclick="saveResult()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Save</button>
+        <button onclick="exportCSV()" class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">Export to CSV</button>
+      </div>
+  
+      <div id="output" class="mb-4 text-sm"></div>
+      <div id="savedList" class="text-sm text-gray-700"></div>
+      <div id="grandTotal" class="mt-4 font-semibold text-lg"></div>
 
-  <label for="station">Station:</label>
-  <select id="station" onchange="updateDayparts()">
-    <option value="Q94">Q94</option>
-    <option value="KAYD">KAYD</option>
-    <option value="Magic">Magic 102.5</option>
-  </select>
-
-  <label for="daypart">Daypart:</label>
-  <select id="daypart" onchange="toggleCustomInputs()"></select>
-
-  <div id="customInputs" style="display:none">
-    <label for="customDaypart">Custom Daypart Label:</label>
-    <input type="text" id="customDaypart" placeholder="e.g., M-F 9a-12p">
-
-    <label for="customRate60">Custom :60 Rate:</label>
-    <input type="number" id="customRate60" placeholder="e.g., 25">
-
-    <label for="customRate30">Custom :30 Rate:</label>
-    <input type="number" id="customRate30" placeholder="e.g., 20">
-
-    <label for="customRate15">Custom :15 Rate:</label>
-    <input type="number" id="customRate15" placeholder="e.g., 12">
-  </div>
-
-  <label for="length">Spot Length:</label>
-  <select id="length">
-    <option value="60">:60</option>
-    <option value="30">:30</option>
-    <option value="15">:15</option>
-  </select>
-
-  <label for="spots">Number of Spots:</label>
-  <input type="number" id="spots" value="10" min="1">
-
-  <button onclick="calculate()">Calculate</button>
-  <button onclick="saveResult()">Save</button>
-  <button onclick="exportCSV()">Export to CSV</button>
-
-  <div class="result" id="output"></div>
-  <div class="saved" id="savedList"></div>
-  <div class="result" id="grandTotal"></div>
+      <div class="mt-10">
+        <h3 class="text-xl font-semibold mb-4 border-b pb-2">Calculation History</h3>
+        <ul id="history" class="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-2 max-h-60 overflow-y-auto text-sm text-gray-700 shadow-inner">
+          <!-- History items will be injected here -->
+        </ul>
+      </div>
+    </div>
+  
 
   <script>
+    let historyEl
     const rates = {
       Q94: {
         "M-F 6A-10A": [35, 28, 18], "M-F 10A-3P": [32, 26, 16], "M-F 3P-7P": [35, 28, 18],
@@ -107,49 +115,43 @@
     }
 
     function calculate() {
-      const station = document.getElementById("station").value;
-      const length = document.getElementById("length").value;
-      const spots = parseInt(document.getElementById("spots").value);
-      const rateMap = {"60": 0, "30": 1, "15": 2};
-      let daypart = document.getElementById("daypart").value;
-      let baseRate;
+  const station = document.getElementById("station").value;
+  const length = document.getElementById("length").value;
+  const spots = parseInt(document.getElementById("spots").value);
+  const rateMap = {"60": 0, "30": 1, "15": 2};
+  let daypart = document.getElementById("daypart").value;
+  let baseRate;
 
-      if (daypart === "Custom") {
-        daypart = document.getElementById("customDaypart").value || "Custom";
-        const rate60 = parseFloat(document.getElementById("customRate60").value) || 0;
-        const rate30 = parseFloat(document.getElementById("customRate30").value) || 0;
-        const rate15 = parseFloat(document.getElementById("customRate15").value) || 0;
-        baseRate = [rate60, rate30, rate15][rateMap[length]];
-      } else {
-        baseRate = rates[station][daypart][rateMap[length]];
-      }
+  if (daypart === "Custom") {
+    daypart = document.getElementById("customDaypart").value || "Custom";
+    const rate60 = parseFloat(document.getElementById("customRate60").value) || 0;
+    const rate30 = parseFloat(document.getElementById("customRate30").value) || 0;
+    const rate15 = parseFloat(document.getElementById("customRate15").value) || 0;
+    baseRate = [rate60, rate30, rate15][rateMap[length]];
+  } else {
+    baseRate = rates[station][daypart][rateMap[length]];
+  }
 
-      const spotCost = baseRate * spots;
-      const streaming = 1 * spots * 2;
-      const adsync = 0.10 * spotCost;
-      const total = spotCost + streaming + adsync;
+  const spotCost = baseRate * spots;
+  const streaming = 1 * spots * 2;
+  const adsync = 0.10 * spotCost;
+  const total = spotCost + streaming + adsync;
 
-      const result = {
-        station, daypart, length, spots, total,
-        summary: `Station: ${station} <br> Daypart: ${daypart} <br> Spot Rate: $${baseRate} <br> Spots: ${spots} <br> Spot Cost: $${spotCost.toFixed(2)} <br> Streaming ($1 each): $${streaming.toFixed(2)} <br> AdSync (10%): $${adsync.toFixed(2)} <br> <strong>Total: $${total.toFixed(2)}</strong>`
-      };
+  const result = {
+    station, daypart, length, spots, total,
+    summary: `Station: ${station} <br> Daypart: ${daypart} <br> Spot Rate: $${baseRate} <br> Spots: ${spots} <br> Spot Cost: $${spotCost.toFixed(2)} <br> Streaming ($1 each): $${streaming.toFixed(2)} <br> AdSync (10%): $${adsync.toFixed(2)} <br> <strong>Total: $${total.toFixed(2)}</strong>`
+  };
 
-      document.getElementById("output").innerHTML = result.summary;
-      return result;
-    }
+  document.getElementById("output").innerHTML = result.summary;
 
-    function saveResult() {
-      const result = calculate();
-      saved.push(result);
-      loadSaved();
-    }
+  // ✅ Push result into history here
+  saved.push(result);
+  loadSaved();
+  updateHistory();
 
-    function loadSaved() {
-      const savedList = document.getElementById("savedList");
-      savedList.innerHTML = saved.map((r, i) => `#${i+1}: $${r.total.toFixed(2)} - ${r.station}`).join("<br>");
-      const grand = saved.reduce((a, b) => a + b.total, 0);
-      document.getElementById("grandTotal").innerHTML = `<hr><strong>Total Budget: $${grand.toFixed(2)}</strong>`;
-    }
+  return result;
+}
+
 
     function exportCSV() {
       if (saved.length === 0) {
@@ -169,7 +171,31 @@
       document.body.removeChild(link);
     }
 
-    window.onload = updateDayparts;
+    window.onload = function () {
+  updateDayparts();
+  historyEl = document.getElementById("history"); // ✔ now assigns to the correct global variable
+};
+
+
+
+    
+
+function updateHistory() {
+  historyEl.innerHTML = saved.map((r, i) => `<li>#${i+1}: ${r.station} | ${r.daypart} | ${r.length}s x ${r.spots} — $${r.total.toFixed(2)}</li>`).join('');
+}
+
+function saveResult() {
+  const result = calculate();
+  saved.push(result);
+  loadSaved();
+}
+
+function loadSaved() {
+  const savedList = document.getElementById("savedList");
+  savedList.innerHTML = saved.map((r, i) => `#${i+1}: $${r.total.toFixed(2)} - ${r.station}`).join("<br>");
+  const grand = saved.reduce((a, b) => a + b.total, 0);
+  document.getElementById("grandTotal").innerHTML = `<hr><strong>Total Budget: $${grand.toFixed(2)}</strong>`;
+}
   </script>
 </body>
 </html>
