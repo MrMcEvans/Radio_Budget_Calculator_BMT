@@ -1,126 +1,148 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <title>Beaumont Radio Budget Calculator</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-  </head>
-  <body class="bg-gray-100 text-gray-800 py-10">
-    <img src="/images/Beaumont Station Watermark.png" class="mx-auto rounded-lg mb-10" alt="">
-    <div class="max-w-2xl mx-auto p-6 bg-white shadow-lg rounded-xl">
-      <h2 class="text-2xl font-bold mb-6 text-center">Beaumont Radio Budget Calculator</h2>
-  
-      <label for="station" class="font-semibold">Station:</label>
-      <select id="station" onchange="updateDayparts()" class="border rounded px-3 py-2 mb-4 w-full">
-        <option value="Q94">Q94</option>
-        <option value="KAYD">KAYD</option>
-        <option value="Magic">Magic 102.5</option>
-      </select>
-  
-      <label for="daypart" class="font-semibold">Daypart:</label>
-      <select id="daypart" onchange="toggleCustomInputs()" class="border rounded px-3 py-2 mb-4 w-full"></select>
-  
-      <div id="customInputs" class="bg-gray-50 border rounded p-4 mb-4 hidden">
-        <label for="customDaypart" class="font-semibold">Custom Daypart Label:</label>
-        <input type="text" id="customDaypart" placeholder="e.g., M-F 9a-12p" class="border rounded px-3 py-2 mb-2 w-full">
-  
-        <label for="customRate60">Custom :60 Rate:</label>
-        <input type="number" id="customRate60" placeholder="e.g., 25" class="border rounded px-3 py-2 mb-2 w-full">
-  
-        <label for="customRate30">Custom :30 Rate:</label>
-        <input type="number" id="customRate30" placeholder="e.g., 20" class="border rounded px-3 py-2 mb-2 w-full">
-  
-        <label for="customRate15">Custom :15 Rate:</label>
-        <input type="number" id="customRate15" placeholder="e.g., 12" class="border rounded px-3 py-2 w-full">
-      </div>
-  
-      <label for="length" class="font-semibold">Spot Length:</label>
-      <select id="length" class="border rounded px-3 py-2 mb-4 w-full">
-        <option value="60">:60</option>
-        <option value="30">:30</option>
-        <option value="15">:15</option>
-      </select>
-  
-      <label for="spots" class="font-semibold">Number of Spots:</label>
-      <input type="number" id="spots" value="10" min="1" class="border rounded px-3 py-2 mb-4 w-full">
-  
-      <div class="flex flex-wrap gap-2 mb-6">
-        <button onclick="calculate()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Calculate</button>
-        <button onclick="saveResult()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Save</button>
-        <button onclick="exportCSV()" class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">Export to CSV</button>
-      </div>
-  
-      <div id="output" class="mb-4 text-sm"></div>
-      <div id="savedList" class="text-sm text-gray-700"></div>
-      <div id="grandTotal" class="mt-4 font-semibold text-lg"></div>
+<head>
+  <meta charset="UTF-8" />
+  <title>Radio Budget Calculator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 py-10">
+  <div class="max-w-3xl mx-auto bg-white p-6 rounded-xl shadow-lg">
+    <h2 class="text-2xl font-bold mb-6 text-center">Radio Budget Calculator</h2>
 
-      <div class="mt-10">
-        <h3 class="text-xl font-semibold mb-4 border-b pb-2">Calculation History</h3>
-        <ul id="history" class="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-2 max-h-60 overflow-y-auto text-sm text-gray-700 shadow-inner">
-          <!-- History items will be injected here -->
-        </ul>
-      </div>
+    <label for="market" class="font-semibold">Market:</label>
+    <select id="market" onchange="updateStations()" class="border rounded px-3 py-2 mb-4 w-full">
+      <option value="Beaumont">Beaumont</option>
+      <option value="Lake Charles">Lake Charles</option>
+    </select>
+
+    <label for="station" class="font-semibold">Station:</label>
+    <select id="station" onchange="updateDayparts()" class="border rounded px-3 py-2 mb-4 w-full"></select>
+
+    <label for="daypart" class="font-semibold">Daypart:</label>
+    <select id="daypart" onchange="toggleCustomInputs()" class="border rounded px-3 py-2 mb-4 w-full"></select>
+
+    <div id="customInputs" class="bg-gray-50 border rounded p-4 mb-4 hidden">
+      <label class="font-semibold" for="customDaypart">Custom Daypart Label:</label>
+      <input type="text" id="customDaypart" placeholder="e.g., M-F 9a-12p" class="border rounded px-3 py-2 mb-2 w-full">
+      <label for="customRate60">Custom :60 Rate:</label>
+      <input type="number" id="customRate60" placeholder="e.g., 25" class="border rounded px-3 py-2 mb-2 w-full">
+      <label for="customRate30">Custom :30 Rate:</label>
+      <input type="number" id="customRate30" placeholder="e.g., 20" class="border rounded px-3 py-2 mb-2 w-full">
+      <label for="customRate15">Custom :15 Rate:</label>
+      <input type="number" id="customRate15" placeholder="e.g., 12" class="border rounded px-3 py-2 w-full">
     </div>
-  
 
-  <script>
-    let historyEl
-    const rates = {
-      Q94: {
-        "M-F 6A-10A": [35, 28, 18], "M-F 10A-3P": [32, 26, 16], "M-F 3P-7P": [35, 28, 18],
-        "M-F 7P-12M": [15, 12, 8], "M-F 12A-6A": [8, 6, 4], "M-F 6A-7P": [32, 26, 16],
-        "M-F 5A-8P": [35, 28, 18], "M-F 5A-12M": [32, 26, 16], "SA-SU 12A-6A": [5, 4, 3],
-        "SA-SU 10A-3P": [25, 20, 13], "SA 6A-7P": [20, 16, 10], "SA 7P-12M": [12, 10, 6],
-        "SU 6A-7P": [20, 16, 10], "SU 7P-12M": [12, 10, 6]
-      },
-      KAYD: {
-        "M-F 6A-10A": [27, 22, 14], "M-F 10A-3P": [25, 20, 13], "M-F 3P-7P": [27, 22, 14],
-        "M-F 7P-12M": [15, 12, 8], "M-F 12A-6A": [8, 6, 4], "M-F 6A-7P": [26, 21, 13],
-        "M-F 5A-8P": [23, 18, 12], "M-F 5A-12M": [18, 14, 9], "SA-SU 12A-6A": [12, 10, 6],
-        "SA-SU 10A-3P": [20, 16, 10], "SA 6A-7P": [11, 9, 6], "SA 7P-12M": [8, 6, 4],
-        "SU 6A-7P": [11, 9, 6], "SU 7P-12M": [8, 6, 4]
-      },
-      Magic: {
-        "M-F 6A-10A": [55, 44, 28], "M-F 10A-3P": [50, 40, 25], "M-F 3P-7P": [50, 40, 25],
-        "M-F 7P-12M": [35, 28, 18], "M-F 12A-6A": [8, 6, 4], "M-F 6A-7P": [50, 40, 25],
-        "M-F 5A-8P": [50, 40, 25], "M-F 5A-12M": [35, 28, 18], "SA-SU 12A-6A": [8, 6, 4],
-        "SA-SU 10A-3P": [40, 32, 20], "SA 6A-7P": [35, 28, 18], "SA 7P-12M": [25, 20, 13],
-        "SU 6A-7P": [30, 24, 15], "SU 7P-12M": [20, 16, 10]
-      }
-    };
+    <label for="length" class="font-semibold">Spot Length:</label>
+    <select id="length" class="border rounded px-3 py-2 mb-4 w-full">
+      <option value="60">:60</option>
+      <option value="30">:30</option>
+      <option value="15">:15</option>
+    </select>
 
-    let saved = [];
+    <label for="spots" class="font-semibold">Number of Spots:</label>
+    <input type="number" id="spots" value="10" min="1" class="border rounded px-3 py-2 mb-4 w-full">
 
-    function updateDayparts() {
-      const station = document.getElementById("station").value;
-      const daypartSelect = document.getElementById("daypart");
-      daypartSelect.innerHTML = '';
-      for (let dp in rates[station]) {
-        const opt = document.createElement("option");
-        opt.value = dp;
-        opt.textContent = dp;
-        daypartSelect.appendChild(opt);
-      }
-      const customOpt = document.createElement("option");
-      customOpt.value = "Custom";
-      customOpt.textContent = "Custom";
-      daypartSelect.appendChild(customOpt);
-      toggleCustomInputs();
+    <div class="flex flex-wrap gap-2 mb-6">
+      <button onclick="calculate()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Calculate</button>
+      <button onclick="saveResult()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Save</button>
+      <button onclick="exportCSV()" class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">Export to CSV</button>
+    </div>
+
+    <div id="output" class="mb-4 text-sm"></div>
+    <div id="grandTotal" class="mt-4 font-semibold text-lg"></div>
+
+    <div class="mt-10">
+      <h3 class="text-xl font-semibold mb-4 border-b pb-2">Saved Schedules</h3>
+      <ul id="history" class="space-y-2 text-sm text-gray-800 max-h-96 overflow-y-auto"></ul>
+    </div>
+  </div>
+
+<script>
+const rates = {
+  "Beaumont": {
+    Q94: {
+      "M-F 6A-10A": [35, 28, 18], "M-F 10A-3P": [32, 26, 16], "M-F 3P-7P": [35, 28, 18],
+      "M-F 7P-12M": [15, 12, 8], "M-F 12A-6A": [8, 6, 4], "M-F 6A-7P": [32, 26, 16],
+      "M-F 5A-8P": [35, 28, 18], "M-F 5A-12M": [32, 26, 16], "SA-SU 12A-6A": [5, 4, 3],
+      "SA-SU 10A-3P": [25, 20, 13], "SA 6A-7P": [20, 16, 10], "SA 7P-12M": [12, 10, 6],
+      "SU 6A-7P": [20, 16, 10], "SU 7P-12M": [12, 10, 6]
+    },
+    KAYD: {
+      "M-F 6A-10A": [27, 22, 14], "M-F 10A-3P": [25, 20, 13], "M-F 3P-7P": [27, 22, 14],
+      "M-F 7P-12M": [15, 12, 8], "M-F 12A-6A": [8, 6, 4], "M-F 6A-7P": [26, 21, 13],
+      "M-F 5A-8P": [23, 18, 12], "M-F 5A-12M": [18, 14, 9], "SA-SU 12A-6A": [12, 10, 6],
+      "SA-SU 10A-3P": [20, 16, 10], "SA 6A-7P": [11, 9, 6], "SA 7P-12M": [8, 6, 4],
+      "SU 6A-7P": [11, 9, 6], "SU 7P-12M": [8, 6, 4]
+    },
+    Magic: {
+      "M-F 6A-10A": [55, 44, 28], "M-F 10A-3P": [50, 40, 25], "M-F 3P-7P": [50, 40, 25],
+      "M-F 7P-12M": [35, 28, 18], "M-F 12A-6A": [8, 6, 4], "M-F 6A-7P": [50, 40, 25],
+      "M-F 5A-8P": [50, 40, 25], "M-F 5A-12M": [35, 28, 18], "SA-SU 12A-6A": [8, 6, 4],
+      "SA-SU 10A-3P": [40, 32, 20], "SA 6A-7P": [35, 28, 18], "SA 7P-12M": [25, 20, 13],
+      "SU 6A-7P": [30, 24, 15], "SU 7P-12M": [20, 16, 10]
     }
+  },
+  "Lake Charles": {
+    KAOK: {"M-F 6a-10a": [15,12,8], "M-Sa 10a-3p": [15,12,8], "M-F 3p-7p": [15,12,8], "M-F 6a-7p": [14,12,7], "M-Su 5a-8p": [13,11,7], "M-Su 7p-12m": [9,6,5], "M-Su 12a-6a": [6,5,4], "Sa-Su 8a-5p": [10,8,5], "M-Su 5a-12m": [10,8,5]},
+    KYKZ: {"M-F 6a-10a": [60,48,30], "M-Sa 10a-3p": [60,48,30], "M-F 3p-7p": [60,48,30], "M-F 6a-7p": [55,44,28], "M-Su 5a-8p": [50,40,25], "M-Su 7p-12m": [19,15,10], "M-Su 12a-6a": [10,8,5], "Sa-Su 8a-5p": [40,32,20], "M-Su 5a-12m": [24,20,12]},
+    KQLK: {"M-F 6a-10a": [26,21,13], "M-Sa 10a-3p": [26,21,13], "M-F 3p-7p": [26,21,13], "M-F 6a-7p": [24,20,12], "M-Su 5a-8p": [20,16,10], "M-Su 7p-12m": [9,6,5], "M-Su 12a-6a": [6,5,4], "Sa-Su 8a-5p": [17,15,9], "M-Su 5a-12m": [14,13,7]},
+    KKGB: {"M-F 6a-10a": [30,24,15], "M-Sa 10a-3p": [30,24,15], "M-F 3p-7p": [30,24,15], "M-F 6a-7p": [27,22,14], "M-Su 5a-8p": [22,18,11], "M-Su 7p-12m": [9,6,5], "M-Su 12a-6a": [6,5,4], "Sa-Su 8a-5p": [18,16,10], "M-Su 5a-12m": [15,14,7]},
+    KBIU: {"M-F 6a-10a": [40,30,17], "M-Sa 10a-3p": [30,24,15], "M-F 3p-7p": [30,24,15], "M-F 6a-7p": [32,26,16], "M-Su 5a-8p": [26,21,13], "M-Su 7p-12m": [9,6,5], "M-Su 12a-6a": [6,5,4], "Sa-Su 8a-5p": [20,16,10], "M-Su 5a-12m": [15,14,7]}
+  }
+};
 
-    function toggleCustomInputs() {
-      const daypart = document.getElementById("daypart").value;
-      const customInputs = document.getElementById("customInputs");
-      customInputs.style.display = daypart === "Custom" ? 'block' : 'none';
-    }
+   let saved = [];
 
-    function calculate() {
+function updateStations() {
+  const market = document.getElementById("market").value;
+  const stationSelect = document.getElementById("station");
+  stationSelect.innerHTML = '';
+  for (let st in rates[market]) {
+    const opt = document.createElement("option");
+    opt.value = st;
+    opt.textContent = st;
+    stationSelect.appendChild(opt);
+  }
+  updateDayparts();
+}
+
+function updateDayparts() {
+  const market = document.getElementById("market").value;
+  const station = document.getElementById("station").value;
+  const daypartSelect = document.getElementById("daypart");
+  daypartSelect.innerHTML = '';
+  for (let dp in rates[market][station]) {
+    const opt = document.createElement("option");
+    opt.value = dp;
+    opt.textContent = dp;
+    daypartSelect.appendChild(opt);
+  }
+  const customOpt = document.createElement("option");
+  customOpt.value = "Custom";
+  customOpt.textContent = "Custom";
+  daypartSelect.appendChild(customOpt);
+  toggleCustomInputs();
+}
+
+function toggleCustomInputs() {
+  const show = document.getElementById("daypart").value === "Custom";
+  document.getElementById("customInputs").style.display = show ? 'block' : 'none';
+}
+
+function calculate() {
+  const market = document.getElementById("market").value;
   const station = document.getElementById("station").value;
   const length = document.getElementById("length").value;
   const spots = parseInt(document.getElementById("spots").value);
-  const rateMap = {"60": 0, "30": 1, "15": 2};
+  const rateMap = { "60": 0, "30": 1, "15": 2 };
+
   let daypart = document.getElementById("daypart").value;
   let baseRate;
+
+  if (!market || !station || !daypart || !length || isNaN(spots)) {
+    alert("Please fill in all fields before calculating.");
+    return null;
+  }
 
   if (daypart === "Custom") {
     daypart = document.getElementById("customDaypart").value || "Custom";
@@ -129,73 +151,95 @@
     const rate15 = parseFloat(document.getElementById("customRate15").value) || 0;
     baseRate = [rate60, rate30, rate15][rateMap[length]];
   } else {
-    baseRate = rates[station][daypart][rateMap[length]];
+    baseRate = rates[market][station][daypart][rateMap[length]];
   }
 
   const spotCost = baseRate * spots;
-  const streaming = 1 * spots * 2;
+  const streaming = 1 * spots * .5;
   const adsync = 0.10 * spotCost;
   const total = spotCost + streaming + adsync;
 
-  const result = {
-    station, daypart, length, spots, total,
-    summary: `Station: ${station} <br> Daypart: ${daypart} <br> Spot Rate: $${baseRate} <br> Spots: ${spots} <br> Spot Cost: $${spotCost.toFixed(2)} <br> Streaming ($1 each): $${streaming.toFixed(2)} <br> AdSync (10%): $${adsync.toFixed(2)} <br> <strong>Total: $${total.toFixed(2)}</strong>`
+  return {
+    market, station, daypart, length, spots, baseRate, spotCost, streaming, adsync, total,
+    summary: `Station: ${station}<br>Daypart: ${daypart}<br>Rate: $${baseRate}<br>Spots: ${spots}<br>Total: <strong>$${total.toFixed(2)}</strong>`
   };
-
-  document.getElementById("output").innerHTML = result.summary;
-
-  // ✅ Push result into history here
-  saved.push(result);
-  loadSaved();
-  updateHistory();
-
-  return result;
-}
-
-
-    function exportCSV() {
-      if (saved.length === 0) {
-        alert("No saved data to export.");
-        return;
-      }
-      let csvContent = "data:text/csv;charset=utf-8,Station,Daypart,Length,Spots,Total\n";
-      saved.forEach(r => {
-        csvContent += `${r.station},${r.daypart},${r.length},${r.spots},${r.total.toFixed(2)}\n`;
-      });
-      const encodedUri = encodeURI(csvContent);
-      const link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", "beaumont-radio-budget.csv");
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-
-    window.onload = function () {
-  updateDayparts();
-  historyEl = document.getElementById("history"); // ✔ now assigns to the correct global variable
-};
-
-
-
-    
-
-function updateHistory() {
-  historyEl.innerHTML = saved.map((r, i) => `<li>#${i+1}: ${r.station} | ${r.daypart} | ${r.length}s x ${r.spots} — $${r.total.toFixed(2)}</li>`).join('');
 }
 
 function saveResult() {
   const result = calculate();
+  if (!result) return;
+
   saved.push(result);
-  loadSaved();
+  saveToLocalStorage();
+  updateHistory();
 }
 
-function loadSaved() {
-  const savedList = document.getElementById("savedList");
-  savedList.innerHTML = saved.map((r, i) => `#${i+1}: $${r.total.toFixed(2)} - ${r.station}`).join("<br>");
-  const grand = saved.reduce((a, b) => a + b.total, 0);
-  document.getElementById("grandTotal").innerHTML = `<hr><strong>Total Budget: $${grand.toFixed(2)}</strong>`;
+function updateHistory() {
+  const historyEl = document.getElementById("history");
+  historyEl.innerHTML = '';
+  saved.forEach((r, i) => {
+    if (!r || typeof r.total !== 'number') return; // skip invalid entries
+
+    const item = document.createElement("li");
+    item.innerHTML = `
+      <div class="bg-gray-100 p-3 rounded shadow flex justify-between items-start">
+        <div>
+          <div class="font-medium">#${i + 1} — ${r.station} @ ${r.daypart}</div>
+          <button onclick="this.nextElementSibling.classList.toggle('hidden')" class="text-blue-600 text-xs underline mt-1">Toggle Details</button>
+          <div class="hidden mt-2 text-gray-700 text-xs">
+            :${r.length} | Spots: ${r.spots}<br>
+            Rate: $${r.baseRate} | Spot Cost: $${r.spotCost?.toFixed(2) ?? "0.00"}<br>
+            Streaming: $${r.streaming?.toFixed(2) ?? "0.00"} | AdSync: $${r.adsync?.toFixed(2) ?? "0.00"}<br>
+            <strong>Total: $${r.total?.toFixed(2) ?? "0.00"}</strong>
+          </div>
+        </div>
+        <button onclick="deleteSaved(${i})" class="text-red-500 text-sm">✕</button>
+      </div>`;
+    historyEl.appendChild(item);
+  });
+
+  const total = saved.reduce((sum, s) => sum + (s.total || 0), 0);
+  document.getElementById("grandTotal").innerHTML = `<hr class="my-2"><strong>Total Budget: $${total.toFixed(2)}</strong>`;
 }
-  </script>
+
+
+function deleteSaved(index) {
+  saved.splice(index, 1);
+  saveToLocalStorage();
+  updateHistory();
+}
+
+function exportCSV() {
+  if (saved.length === 0) return alert("No data to export.");
+  let csv = "Market,Station,Daypart,Length,Spots,Total\n";
+  saved.forEach(r => {
+    csv += `${r.market},${r.station},${r.daypart},${r.length},${r.spots},${r.total.toFixed(2)}\n`;
+  });
+  const uri = "data:text/csv;charset=utf-8," + encodeURIComponent(csv);
+  const link = document.createElement("a");
+  link.setAttribute("href", uri);
+  link.setAttribute("download", "radio_schedules.csv");
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+function saveToLocalStorage() {
+  localStorage.setItem("radioSchedules", JSON.stringify(saved));
+}
+
+function loadFromLocalStorage() {
+  const data = localStorage.getItem("radioSchedules");
+  if (data) {
+    saved = JSON.parse(data);
+    updateHistory();
+  }
+}
+
+window.onload = () => {
+  updateStations();
+  loadFromLocalStorage();
+};
+</script>
 </body>
 </html>
